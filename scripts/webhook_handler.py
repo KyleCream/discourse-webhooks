@@ -48,32 +48,37 @@ def main():
     
     for tag in topic_tags:
         tag_file = os.path.join(args.tag_root, f"{tag}.json")
-        if os.path.exists(tag_file):
-            # 更新已有tag的索引
-            tag_data = load_cache(tag_file) or {"topics": []}
-            topics = tag_data.get("topics", [])
+        # 加载Tag数据，不存在则自动创建
+        tag_data = load_cache(tag_file) or {
+            "topics": [],
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        }
+        topics = tag_data.get("topics", [])
+        
+        if not any(t.get("id") == topic_id for t in topics):
+            topics.insert(0, topic)
+            if len(topics) > 200:  # 每个tag保留最近200帖
+                topics = topics[:200]
             
-            if not any(t.get("id") == topic_id for t in topics):
-                topics.insert(0, topic)
-                if len(topics) > 200:  # 每个tag保留最近200帖
-                    topics = topics[:200]
-                
-                tag_data["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-                tag_data["topics"] = topics
-                save_cache(tag_file, tag_data)
+            tag_data["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
+            tag_data["topics"] = topics
+            save_cache(tag_file, tag_data)
+            
+            if os.path.exists(tag_file):
                 print(f"✅ 已更新Tag '{tag}' 的索引（当前 {len(topics)} 帖）")
-                updated_count += 1
-        else:
-            unknown_tags.append(tag)
-            print(f"⚠️ 未知Tag '{tag}'，待Agent审核")
+            else:
+                print(f"🆕 已创建新Tag '{tag}' 并添加帖子（当前 {len(topics)} 帖）")
+            updated_count += 1
     
-    if unknown_tags:
-        # 发送通知给Agent处理未知Tag
-        send_agent_notification(
-            title="新帖包含未知Tag",
-            message=f"帖子：{topic_title}\nID：{topic_id}\n未知Tags：{', '.join(unknown_tags)}",
-            level="info"
-        )
+    # 自动创建新Tag，不再通知Agent
+    # unknown_tags = []
+    # if unknown_tags:
+    #     # 发送通知给Agent处理未知Tag
+    #     send_agent_notification(
+    #         title="新帖包含未知Tag",
+    #         message=f"帖子：{topic_title}\nID：{topic_id}\n未知Tags：{', '.join(unknown_tags)}",
+    #         level="info"
+    #     )
     
     print(f"\n处理完成：更新了 {updated_count} 个Tag索引，{len(unknown_tags)} 个未知Tag待处理")
     print("\n" + "="*60)

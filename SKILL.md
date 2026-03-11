@@ -1,6 +1,6 @@
 ---
 name: discourse-webhook
-description: Discourse Webhook 接收处理服务。独立运行，接收新帖通知，自动更新tag索引，无需耦合推荐逻辑。
+description: Discourse Webhook 接收处理服务。独立运行，接收新帖通知，自动更新/创建tag索引，无需人工审核。
 ---
 
 # Discourse Webhook Service
@@ -12,7 +12,7 @@ Discourse Webhook 独立接收处理服务，负责实时更新tag索引。
 - ✅ 独立运行，与推荐Skill解耦
 - ✅ 监听新帖事件，自动提取帖子tag
 - ✅ 自动更新对应tag的索引文件
-- ✅ 未知tag自动通知Agent审核
+- ✅ 新tag自动创建对应的JSON文件，无需人工干预
 - ✅ 支持OpenClaw内置webhook或独立服务运行
 
 ## 目录结构
@@ -86,7 +86,7 @@ python3 webhook_server.py
 ## 工作流程
 
 ```
-新帖子创建 → Webhook触发 → 提取帖子tag → 检查tag是否存在
-    ├─ ✅ 存在 → 更新对应tag的索引文件
-    └─ ❌ 不存在 → 通知Agent审核处理
+新帖子创建 → Webhook触发 → 提取帖子tag → 自动更新/创建tag索引文件
+    ├─ ✅ 已存在Tag → 直接更新索引，添加新帖子
+    └─ 🆕 新Tag → 自动创建对应的JSON文件，添加帖子
 ```
