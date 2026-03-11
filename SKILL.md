@@ -81,6 +81,8 @@ python3 webhook_server.py
 }
 ```
 
+**重要说明**：`tag_root` 请配置为 `discourse-recommender-service` Skill 下的 `tags` 目录路径，确保webhook更新的tag索引可以被推荐服务直接读取使用，无需额外同步。
+
 ## 工作流程
 
 ```
